@@ -43,7 +43,10 @@ class BytebeatExtension {
 
     const bufferSize = 4096;
     this.scriptNode = this.audioCtx.createScriptProcessor(bufferSize, 0, 1);
-    const sampleRate = this.audioCtx.sampleRate;
+
+    const targetRate = 8000; // Desired bytebeat sample rate
+    const actualRate = this.audioCtx.sampleRate;
+    const rateScale = targetRate / actualRate;
 
     this.scriptNode.onaudioprocess = (event) => {
       const output = event.outputBuffer.getChannelData(0);
@@ -51,7 +54,7 @@ class BytebeatExtension {
       for (let i = 0; i < len; i++) {
         const t = this.t | 0;
 
-        // The given bytebeat formula
+        // Original bytebeat formula
         const part1 = ((t * t) >> 0xFFF2) & (t >> 5);
         const part2 = ((t * t) >> 0xFFD2) & (t >> 5);
         const y = (part1 | part2) * 255;
@@ -60,7 +63,7 @@ class BytebeatExtension {
         const sample = (byte8 / 128.0) - 1.0;
 
         output[i] = sample;
-        this.t++;
+        this.t += rateScale; // increment at 8kHz rate
       }
     };
 
